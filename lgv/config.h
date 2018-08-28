@@ -11,6 +11,10 @@
 #define CONFIG_LOOP_WAIT            (10 * US_PER_SEC)
 #define CONFIG_STRBUF_LEN           (32U)
 
+#define SENSOR_TIMEOUT_MS       (5 * US_PER_SEC)
+#define SENSOR_NUM_SAMPLES      (10U)
+#define SENSOR_THREAD_STACKSIZE (3 * THREAD_STACKSIZE_DEFAULT)
+
 int sensor_get_temperature(void);
 int sensor_get_humidity(void);
 size_t node_get_info(char *buf);

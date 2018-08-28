@@ -39,9 +39,8 @@ static tmp006_t dev_tmp006;
 
 #include "config.h"
 
-#define SENSOR_TIMEOUT_MS       (5 * US_PER_SEC)
-#define SENSOR_NUM_SAMPLES      (10U)
-#define SENSOR_THREAD_STACKSIZE (3 * THREAD_STACKSIZE_DEFAULT)
+#define ENABLE_DEBUG 0
+#include "debug.h"
 
 static int16_t samples_humidity[SENSOR_NUM_SAMPLES];
 static int16_t samples_temperature[SENSOR_NUM_SAMPLES];
