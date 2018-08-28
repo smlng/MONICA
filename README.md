@@ -1,2 +1,2 @@
 # MONICA
-Demo application for the MONICA EU project (mostly) using RIOT-OS
+Demo applications for the MONICA EU project (mostly) using RIOT-OS
