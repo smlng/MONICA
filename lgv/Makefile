@@ -1,5 +1,5 @@
 # name of your application
-APPLICATION = lgv-demo
+APPLICATION = monica-lgv-demo
 
 BOARD_WHITELIST := native pba-d-01-kw2x
 # If no BOARD is found in the environment, use this default:
@@ -15,7 +15,6 @@ USEMODULE += gnrc_sock_udp
 USEMODULE += gcoap
 USEMODULE += xtimer
 USEMODULE += fmt
-USEMODULE += od
 # optional modules, e.g. for debugging
 USEMODULE += gnrc_icmpv6_echo
 
@@ -24,6 +23,9 @@ ifeq ($(BOARD),pba-d-01-kw2x)
 	USEMODULE += hdc1000
 	USEMODULE += tmp006
 endif
+
+CFLAGS += -DGCOAP_REQ_WAITING_MAX=4
+CFLAGS += -DGCOAP_NON_TIMEOUT=1000000
 
 # get rid of stack corruption and panics
 ifneq ($(BOARD),native)

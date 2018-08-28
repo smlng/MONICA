@@ -18,7 +18,6 @@
 // riot
 #include "board.h"
 #include "fmt.h"
-#include "log.h"
 #include "msg.h"
 #include "net/af.h"
 #include "net/gnrc/ipv6.h"
@@ -29,10 +28,11 @@
 // own
 #include "config.h"
 
+#define ENABLE_DEBUG 0
+#include "debug.h"
+
 #define COMM_PAN        (0x2121) // lowpan ID
 #define COMM_CHAN       (15U)  // channel
-
-static int sensor_pid = -1;
 
 extern int coap_init(void);
 extern int sensor_init(void);
@@ -40,7 +40,7 @@ extern void post_sensordata(char *data, char *path);
 
 size_t node_get_info(char *buf)
 {
-    puts("print_ipv6_addresses");
+    DEBUG("[MAIN] %s\n", __func__);
     ipv6_addr_t ipv6_addrs[GNRC_NETIF_IPV6_ADDRS_NUMOF];
     gnrc_netif_t *netif = gnrc_netif_iter(NULL);
     size_t len = 0;
@@ -63,12 +63,13 @@ size_t node_get_info(char *buf)
 
 static int comm_init(void)
 {
+    DEBUG("[MAIN] %s\n", __func__);
     uint16_t pan = COMM_PAN;
     uint16_t chan = COMM_CHAN;
     /* get the PID of the first radio */
     gnrc_netif_t *netif = gnrc_netif_iter(NULL);
     if (netif == NULL) {
-        LOG_ERROR("!! comm_init failed, not radio found !!\n");
+        DEBUG("[MAIN] ERROR: no network interface found!\n");
         return 1;
     }
     kernel_pid_t iface = netif->pid;
@@ -86,22 +87,22 @@ static int comm_init(void)
 int main(void)
 {
     // some initial infos
-    puts(" LGV RIOT Demo - Environmental Sensors");
-    puts("======================================\n");
+    puts(" MONICA LGV Demo - Environmental Sensors");
+    puts("=========================================\n");
     // init 6lowpan interface
     LED0_ON;
-    LOG_INFO(".. init network\n");
+    DEBUG(".. init network\n");
     if (comm_init() != 0) {
         return 1;
     }
     // start sensor thread
-    LOG_INFO(".. init sensors\n");
-    if ((sensor_pid = sensor_init()) < 0) {
+    DEBUG(".: init sensors\n");
+    if (sensor_init()<= 0) {
         return 1;
     }
     // start coap thread
-    LOG_INFO(".. init coap\n");
-    if(coap_init() < 0) {
+    DEBUG(":: init coap\n");
+    if (coap_init() < 0) {
         return 1;
     }
     LED0_OFF;
@@ -109,26 +110,31 @@ int main(void)
     LED1_OFF;
     LED2_OFF;
 #endif
-    LOG_INFO("\n");
+    DEBUG("\n");
     while(1) {
         char strbuf[CONFIG_STRBUF_LEN];
         int pos = 0;
         int len = CONFIG_STRBUF_LEN - 1;
-        int t = sensor_get_temperature();
+        int16_t h, t;
+        sensor_get_humidity(&h);
+        sensor_get_temperature(&t);
+        /* post temperature */
         memset(strbuf, '\0', CONFIG_STRBUF_LEN);
         pos += snprintf(strbuf, len, "{\"result\":");
-        pos += fmt_s32_dfp((strbuf + pos), t, -2);
+        pos += fmt_s16_dfp((strbuf + pos), t, -2);
         pos += snprintf((strbuf + pos), (len -  pos),"}");
-        puts("> post temperature");
-        print_str(strbuf);
-        puts("");
+        printf("-- CoAP POST temperature: %s\n", strbuf);
         post_sensordata(strbuf, CONFIG_PATH_TEMPERATURE);
-        /*
-        memset(strbuf, '\0', 32);
-        sprintf(strbuf, "{\"result\":%d}", h);
-        puts("> post humidity");
+        /* post humitity */
+        memset(strbuf, '\0', CONFIG_STRBUF_LEN);
+        pos = 0;
+        len = CONFIG_STRBUF_LEN - 1;
+        pos += snprintf(strbuf, len, "{\"result\":");
+        pos += fmt_s16_dfp((strbuf + pos), h, -2);
+        pos += snprintf((strbuf + pos), (len -  pos),"}");
+        printf("-- CoAP POST humidity: %s\n", strbuf);
         post_sensordata(strbuf, CONFIG_PATH_HUMITIDY);
-        */
+        /* wait for next round */
         xtimer_usleep(CONFIG_LOOP_WAIT);
     }
     // should be never reached

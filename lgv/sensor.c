@@ -41,8 +41,8 @@ static tmp006_t dev_tmp006;
 #define ENABLE_DEBUG 0
 #include "debug.h"
 
-static int16_t samples_humidity[SENSOR_NUM_SAMPLES];
-static int16_t samples_temperature[SENSOR_NUM_SAMPLES];
+static int16_t s_humidity;
+static int16_t s_temperature;
 static mutex_t mutex;
 
 static char sensor_thread_stack[SENSOR_THREAD_STACKSIZE];
@@ -52,16 +52,12 @@ static char sensor_thread_stack[SENSOR_THREAD_STACKSIZE];
  *
  * @return temperature
  */
-int sensor_get_temperature(void)
+void sensor_get_temperature(int16_t *t)
 {
     DEBUG("[SENSOR] %s\n", __func__);
-    int32_t sum = 0;
     mutex_lock(&mutex);
-    for (unsigned i = 0; i < SENSOR_NUM_SAMPLES; i++) {
-        sum += samples_temperature[i];
-    }
+    *t = s_temperature;
     mutex_unlock(&mutex);
-    return (int)(sum/SENSOR_NUM_SAMPLES);
 }
 
 /**
@@ -69,16 +65,12 @@ int sensor_get_temperature(void)
  *
  * @return humidity
  */
-int sensor_get_humidity(void)
+void sensor_get_humidity(int16_t *h)
 {
     DEBUG("[SENSOR] %s\n", __func__);
-    int32_t sum = 0;
     mutex_lock(&mutex);
-    for (unsigned i = 0; i < SENSOR_NUM_SAMPLES; i++) {
-        sum += samples_humidity[i];
-    }
+    *h = s_humidity;
     mutex_unlock(&mutex);
-    return (int)(sum/SENSOR_NUM_SAMPLES);
 }
 
 /**
@@ -107,16 +99,16 @@ static int16_t _get_humidity(void) {
 static int16_t _get_temperature(void)
 {
     DEBUG("[SENSOR] %s\n", __func__);
-
+    int16_t to;
 #ifdef MODULE_TMP006
-    int16_t ta, to;
+    int16_t ta;
     /* read sensor, quit on error */
     if (tmp006_read_temperature(&dev_tmp006, &ta, &to)) {
         DEBUG("[SENSOR] ERROR: tmp006_read_temperature failed!\n");
         return 0;
     }
 #else
-    int16_t to = (int16_t) random_uint32_range(0, 5000);
+    to = (int16_t) random_uint32_range(0, 5000);
 #endif /* MODULE_TMP006 */
     return to;
 }
@@ -146,12 +138,10 @@ static int _init(void) {
         return 1;
     }
 #endif /* MODULE_TMP006 */
+    xtimer_usleep(SENSOR_TIMEOUT_MS);
     mutex_lock(&mutex);
-    for (unsigned i = 0; i < SENSOR_NUM_SAMPLES; i++) {
-        xtimer_sleep(1);
-        samples_humidity[i]    = _get_humidity();
-        samples_temperature[i] = _get_temperature();
-    }
+    s_humidity = _get_humidity();
+    s_temperature = _get_temperature();
     mutex_unlock(&mutex);
     return 0;
 }
@@ -165,20 +155,19 @@ static void *sensor_thread(void *arg)
 {
     (void) arg;
     unsigned count = 0;
-    xtimer_usleep(SENSOR_TIMEOUT_MS);
+
     while(1) {
+        ++count;
+        xtimer_usleep(SENSOR_TIMEOUT_MS);
         /* get latest sensor data */
         mutex_lock(&mutex);
-        samples_temperature[count] = _get_temperature();
-        samples_humidity[count] = _get_humidity();
-        mutex_unlock(&mutex);
-        /* next round */
-        count = (count + 1) % SENSOR_NUM_SAMPLES;
-        if (count == 0) {
-            DEBUG("[SENSOR] INFO: T=%d, H=%d\n",
-                  sensor_get_temperature(), sensor_get_humidity());
+        s_humidity = (s_humidity + _get_humidity()) / 2;
+        s_temperature = (s_temperature + _get_temperature()) / 2;
+        /* some Info message */
+        if (!(count % SENSOR_NUM_SAMPLES)) {
+            printf("[SENSOR] INFO: T=%d, H=%d\n", s_humidity, s_temperature);
         }
-        xtimer_usleep(SENSOR_TIMEOUT_MS);
+        mutex_unlock(&mutex);
     }
     return NULL;
 }
@@ -196,6 +185,6 @@ int sensor_init(void)
     }
     /* start sensor thread for periodic measurements */
     return thread_create(sensor_thread_stack, sizeof(sensor_thread_stack),
-                        THREAD_PRIORITY_MAIN-1, THREAD_CREATE_STACKTEST,
-                        sensor_thread, NULL, "sensor_thread");
+                         THREAD_PRIORITY_MAIN-1, THREAD_CREATE_STACKTEST,
+                         sensor_thread, NULL, "sensor");
 }
