@@ -16,7 +16,6 @@
 
 #include "board.h"
 #include "periph_conf.h"
-#include "log.h"
 #include "mutex.h"
 #include "thread.h"
 #include "xtimer.h"
@@ -55,6 +54,7 @@ static char sensor_thread_stack[SENSOR_THREAD_STACKSIZE];
  */
 int sensor_get_temperature(void)
 {
+    DEBUG("[SENSOR] %s\n", __func__);
     int32_t sum = 0;
     mutex_lock(&mutex);
     for (unsigned i = 0; i < SENSOR_NUM_SAMPLES; i++) {
@@ -71,6 +71,7 @@ int sensor_get_temperature(void)
  */
 int sensor_get_humidity(void)
 {
+    DEBUG("[SENSOR] %s\n", __func__);
     int32_t sum = 0;
     mutex_lock(&mutex);
     for (unsigned i = 0; i < SENSOR_NUM_SAMPLES; i++) {
@@ -87,10 +88,10 @@ int sensor_get_humidity(void)
  * @param[out] hum the measured humitity in % * 100
  */
 static int16_t _get_humidity(void) {
+    DEBUG("[SENSOR] %s\n", __func__);
     int16_t h;
 #ifdef MODULE_HDC1000
     int16_t t;
-    LOG_DEBUG("[SENSOR] _hdc1000_measure\n");
     hdc1000_read(&dev_hdc1000, &t, &h);
 #else
     h = (int16_t) random_uint32_range(0, 10000);
@@ -105,13 +106,13 @@ static int16_t _get_humidity(void) {
  */
 static int16_t _get_temperature(void)
 {
-    LOG_DEBUG("[SENSOR] _get_temperature\n");
+    DEBUG("[SENSOR] %s\n", __func__);
 
 #ifdef MODULE_TMP006
     int16_t ta, to;
     /* read sensor, quit on error */
     if (tmp006_read_temperature(&dev_tmp006, &ta, &to)) {
-        LOG_ERROR("[SENSOR] tmp006_read failed\n");
+        DEBUG("[SENSOR] ERROR: tmp006_read_temperature failed!\n");
         return 0;
     }
 #else
@@ -126,22 +127,22 @@ static int16_t _get_temperature(void)
  * @return 0 on success, anything else on error
  */
 static int _init(void) {
-    LOG_DEBUG("[SENSOR] _init\n");
+    DEBUG("[SENSOR] %s\n", __func__);
 #ifdef MODULE_HDC1000
     /* initialise humidity sensor hdc1000 */
     if ((hdc1000_init(&dev_hdc1000, &hdc1000_params[0]) != 0)) {
-        LOG_ERROR("[SENSOR] HDC1000 init");
+        DEBUG("[SENSOR] ERROR: hdc1000_init failed!\n");
         return 1;
     }
 #endif /* MODULE_HDC1000 */
 #ifdef MODULE_TMP006
     /* init temperature sensor tmp006 */
     if ((tmp006_init(&dev_tmp006, &tmp006_params[0]) != 0)) {
-        LOG_ERROR("[SENSOR] TMP006 init");
+        DEBUG("[SENSOR] ERROR: tmp006_init failed!\n");
         return 1;
     }
     if (tmp006_set_active(&dev_tmp006)) {
-        LOG_ERROR("[SENSOR] TMP006 activate.");
+        DEBUG("[SENSOR] ERROR: tmp006_set_active failed!\n");
         return 1;
     }
 #endif /* MODULE_TMP006 */
@@ -174,8 +175,8 @@ static void *sensor_thread(void *arg)
         /* next round */
         count = (count + 1) % SENSOR_NUM_SAMPLES;
         if (count == 0) {
-            LOG_INFO("[SENSOR] raw data T: %d, H: %d\n",
-                     sensor_get_temperature(), sensor_get_humidity());
+            DEBUG("[SENSOR] INFO: T=%d, H=%d\n",
+                  sensor_get_temperature(), sensor_get_humidity());
         }
         xtimer_usleep(SENSOR_TIMEOUT_MS);
     }
