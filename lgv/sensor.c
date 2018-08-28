@@ -38,7 +38,7 @@ static tmp006_t dev_tmp006;
 
 #include "config.h"
 
-#define ENABLE_DEBUG 0
+#define ENABLE_DEBUG 1
 #include "debug.h"
 
 static int16_t s_humidity;
@@ -138,7 +138,7 @@ static int _init(void) {
         return 1;
     }
 #endif /* MODULE_TMP006 */
-    xtimer_usleep(SENSOR_TIMEOUT_MS);
+    xtimer_sleep(SENSOR_TIMEOUT);
     mutex_lock(&mutex);
     s_humidity = _get_humidity();
     s_temperature = _get_temperature();
@@ -157,18 +157,19 @@ static void *sensor_thread(void *arg)
     unsigned count = 0;
 
     while(1) {
-        ++count;
-        xtimer_usleep(SENSOR_TIMEOUT_MS);
+        count = (count + 1) % SENSOR_NUM_SAMPLES;
+        xtimer_sleep(SENSOR_TIMEOUT);
         /* get latest sensor data */
         mutex_lock(&mutex);
         s_humidity = (s_humidity + _get_humidity()) / 2;
         s_temperature = (s_temperature + _get_temperature()) / 2;
-        /* some Info message */
-        if (!(count % SENSOR_NUM_SAMPLES)) {
-            printf("[SENSOR] INFO: T=%d, H=%d\n", s_humidity, s_temperature);
-        }
         mutex_unlock(&mutex);
+        /* some Info message */
+        if (!count) {
+            printf("[SENSOR] INFO: H=%d, T=%d\n", s_humidity, s_temperature);
+        }
     }
+    /* should never be reached */
     return NULL;
 }
 

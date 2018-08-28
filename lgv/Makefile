@@ -24,7 +24,7 @@ ifeq ($(BOARD),pba-d-01-kw2x)
 	USEMODULE += tmp006
 endif
 
-CFLAGS += -DGCOAP_REQ_WAITING_MAX=4
+CFLAGS += -DGCOAP_REQ_WAITING_MAX=8
 CFLAGS += -DGCOAP_NON_TIMEOUT=1000000
 
 # get rid of stack corruption and panics

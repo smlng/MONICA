@@ -10,10 +10,10 @@
 
 #define CONFIG_PATH_TEMPERATURE     "/Datastreams(2)/Observations"
 #define CONFIG_PATH_HUMITIDY        "/Datastreams(3)/Observations"
-#define CONFIG_LOOP_WAIT            (10 * US_PER_SEC)
+#define CONFIG_LOOP_WAIT            (10U)
 #define CONFIG_STRBUF_LEN           (32U)
 
-#define SENSOR_TIMEOUT_MS           (5 * US_PER_SEC)
+#define SENSOR_TIMEOUT              (3U)
 #define SENSOR_NUM_SAMPLES          (10U)
 #define SENSOR_THREAD_STACKSIZE     (2 * THREAD_STACKSIZE_DEFAULT)
 

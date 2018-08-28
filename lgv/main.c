@@ -28,7 +28,7 @@
 // own
 #include "config.h"
 
-#define ENABLE_DEBUG 0
+#define ENABLE_DEBUG 1
 #include "debug.h"
 
 #define COMM_PAN        (0x2121) // lowpan ID
@@ -135,7 +135,7 @@ int main(void)
         printf("-- CoAP POST humidity: %s\n", strbuf);
         post_sensordata(strbuf, CONFIG_PATH_HUMITIDY);
         /* wait for next round */
-        xtimer_usleep(CONFIG_LOOP_WAIT);
+        xtimer_sleep(CONFIG_LOOP_WAIT);
     }
     // should be never reached
     return 0;

@@ -4,7 +4,7 @@
 // own
 #include "config.h"
 
-#define ENABLE_DEBUG 0
+#define ENABLE_DEBUG 1
 #include "debug.h"
 
 static ssize_t _info_handler(coap_pkt_t* pdu, uint8_t *buf, size_t len, void *ctx);
