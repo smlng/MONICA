@@ -1,39 +1,37 @@
-#!/bin/env python3
+#!/usr/bin/env python3
 import logging
 import os
 import time
-import ttn
+import json
 
 import requests
-
+import ttn
 from cayennelpp import LppFrame
 
 
-# logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG)
 
 app_id = "ttn-app.example"
 app_key = "ttn-account-v2.example"
-post_url = "http://example.com/locations"
+dev_urls = {"example": {"id": 12345, "url": "http://example.com/locations"}}
 
-if os.path.isfile("ttn.secrets"):
-    with open("ttn.secrets", "r") as f:
-        app_id = f.readline().strip()
-        app_key = f.readline().strip()
-        post_url = f.readline().strip()
+f_secrets = "ttn.secrets"
+f_tracker = "tracker.url"
 
 
 def uplink_callback(msg, client):
     print("Uplink message")
     print("  FROM: ", msg.dev_id)
     print("  TIME: ", msg.metadata.time)
+    print("   RAW: ", msg.payload_raw)
     frame = LppFrame.from_base64(msg.payload_raw)
     for d in frame.data:
-        logging.debug(d)
-    lat = frame.data[0].data[0]
-    lon = frame.data[0].data[1]
+        print("  DATA:", d)
+    lat = frame.data[0].value[0]
+    lon = frame.data[0].value[1]
     location = {
-        "name": "Latest GPS tracker location",
-        "description": "Continuously updated",
+        "name": msg.dev_id,
+        "description": "Continuously updated GPS location of tracker device",
         "encodingType": "application/vnd.geo+json",
         "location": {
             "type": "Feature",
@@ -46,16 +44,41 @@ def uplink_callback(msg, client):
             }
         }
     }
-    print("  POST values: %s" % str(location))
-    r = requests.post(post_url, json=location)
-    print("  POST status: %d" % r.status_code)
+    print("  POST values: ", str(location))
+    if msg.dev_id in dev_urls:
+        print("  POST URL: ", dev_urls[msg.dev_id]['url'])
+        r = requests.post(dev_urls[msg.dev_id]['url'], json=location)
+        print("  POST status: %d" % r.status_code)
+    else:
+        print("  invalid device: ", msg.dev_id)
 
 
-ttncli = ttn.HandlerClient(app_id, app_key)
+def main():
+    if os.path.isfile(f_secrets):
+        with open(f_secrets, "r") as f:
+            secrets = json.loads(f.read())
+            app_id = secrets['app_id']
+            app_key = secrets['app_key']
 
-mqttcli = ttncli.data()
-mqttcli.set_uplink_callback(uplink_callback)
-mqttcli.connect()
+    print("APP ID: ", app_id)
+    print("APP KEY:", app_key)
 
-while 1:
-    time.sleep(10)
+    if os.path.isfile(f_tracker):
+        with open(f_tracker, "r") as f:
+            global dev_urls
+            dev_urls = json.loads(f.read())
+
+    print("URLS: ", json.dumps(dev_urls, indent=2))
+
+    ttncli = ttn.HandlerClient(app_id, app_key)
+
+    mqttcli = ttncli.data()
+    mqttcli.set_uplink_callback(uplink_callback)
+    mqttcli.connect()
+
+    while 1:
+        time.sleep(10)
+
+
+if __name__ == "__main__":
+    main()
