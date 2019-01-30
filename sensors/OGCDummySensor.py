@@ -17,6 +17,9 @@ class OGCDummySensor():
         self.__sensor = sensor
         self.__stream = stream_url
 
+    def set(self, value):
+        self.__sensor.set(value)
+
     def send(self):
         """get next sensor value and POST it to the stream"""
         payload = dict()
@@ -30,7 +33,7 @@ class OGCDummySensor():
             logging.error("POST failed (%s)" % (r.status_code))
 
 
-def create_ogc_dummy_sensor(type, url):
+def create_ogc_dummy_sensor(type, url, init=None):
     if type.upper().startswith("HUM"):
         s = Sensor.Humidity()
     elif type.upper().startswith("PRESS"):
@@ -39,7 +42,10 @@ def create_ogc_dummy_sensor(type, url):
         s = Sensor.Temperature()
     else:
         raise TypeError("Invalid TYPE (humidity, pressure, temperature)")
-    return OGCDummySensor(s, url)
+    dummy = OGCDummySensor(s, url)
+    if init:
+        dummy.set(init)
+    return dummy
 
 
 def main():
