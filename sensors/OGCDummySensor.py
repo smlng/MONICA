@@ -30,23 +30,26 @@ class OGCDummySensor():
             logging.error("POST failed (%s)" % (r.status_code))
 
 
+def create_ogc_dummy_sensor(type, url):
+    if type.upper().startswith("HUM"):
+        s = Sensor.Humidity()
+    elif type.upper().startswith("PRESS"):
+        s = Sensor.Pressure()
+    elif type.upper().startswith("TEMP"):
+        s = Sensor.Temperature()
+    else:
+        raise TypeError("Invalid TYPE (humidity, pressure, temperature)")
+    return OGCDummySensor(s, url)
+
+
 def main():
     logging.basicConfig(level=logging.DEBUG)
+
     if len(sys.argv) != 3:
         print("USAGE: %s SENSOR_TYPE STREAM_URL")
         sys.exit(1)
-
-    url = sys.argv[2]
-    if sys.argv[1].upper().startswith("HUM"):
-        s = Sensor.Humidity()
-    elif sys.argv[1].upper().startswith("PRESS"):
-        s = Sensor.Pressure()
-    elif sys.argv[1].upper().startswith("TEMP"):
-        s = Sensor.Temperature()
-    else:
-        logging.error("Invalid SENSOR_TYPE (humidity, pressure, temperature)")
-        sys.exit(2)
-    dummy = OGCDummySensor(s, url)
+    logging.debug("ARGV: (%s, %s)" % (sys.argv[1], sys.argv[2]))
+    dummy = create_ogc_dummy_sensor(sys.argv[1], sys.argv[2])
     dummy.send()
 
 
