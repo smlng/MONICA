@@ -48,13 +48,6 @@ class Sensor():
                       (str(self.__last_value / self.__p10)))
 
 
-class Temperature(Sensor):
-
-    def __init__(self):
-        logging.info("Create temperature sensor")
-        super().__init__(-10, 30, 1)
-
-
 class Humidity(Sensor):
 
     def __init__(self):
@@ -69,17 +62,36 @@ class Pressure(Sensor):
         super().__init__(980, 1120, 1, 5)
 
 
+class Temperature(Sensor):
+
+    def __init__(self):
+        logging.info("Create temperature sensor")
+        super().__init__(-10, 30, 1)
+
+
+class Wind(Sensor):
+
+    def __init__(self):
+        logging.info("Create temperature sensor")
+        super().__init__(0, 30, 1, 0.5)
+
+
 def main():
     logging.basicConfig(level=logging.ERROR)
-    t = Temperature()
+
     h = Humidity()
     p = Pressure()
-    t.set(11)
+    t = Temperature()
+    w = Wind()
+
     h.set(70)
     p.set(1005)
+    t.set(11)
+    w.set(3)
 
     while True:
-        print("T: {}, H: {}, P: {}".format(t.read(), h.read(), p.read()))
+        print("H: {}, P: {}, T: {}, W: {}".format(h.read(), p.read(),
+                                                  t.read(), w.read()))
         sleep(1)
 
 
