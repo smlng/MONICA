@@ -1,0 +1,9 @@
+version: '3'
+services:
+  lora2ogc-proxy:
+    build: .
+    image: lora2ogc-proxy
+    volumes: 
+      - ./:/opt/proxy
+    restart: always
+    command: ["python3", "proxy.py"]
