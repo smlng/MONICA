@@ -72,7 +72,7 @@ class Temperature(Sensor):
 class Wind(Sensor):
 
     def __init__(self):
-        logging.info("Create temperature sensor")
+        logging.info("Create wind sensor")
         super().__init__(0, 30, 1, 0.5)
 
 

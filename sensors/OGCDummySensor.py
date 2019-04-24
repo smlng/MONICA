@@ -34,14 +34,16 @@ class OGCDummySensor():
 
 
 def create_ogc_dummy_sensor(type, url, init=None):
-    if type.upper().startswith("HUM"):
+    if type.upper().startswith("H"):
         s = Sensor.Humidity()
-    elif type.upper().startswith("PRESS"):
+    elif type.upper().startswith("P"):
         s = Sensor.Pressure()
-    elif type.upper().startswith("TEMP"):
+    elif type.upper().startswith("T"):
         s = Sensor.Temperature()
+    elif type.upper().startswith("W"):
+        s = Sensor.Wind()
     else:
-        raise TypeError("Invalid TYPE (humidity, pressure, temperature)")
+        raise TypeError("Invalid TYPE (humidity, pressure, temperature, wind)")
     dummy = OGCDummySensor(s, url)
     if init:
         dummy.set(init)
