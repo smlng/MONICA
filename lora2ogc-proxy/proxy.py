@@ -8,14 +8,17 @@ import base64
 import requests
 import ttn
 
+from datetime import datetime
+
 
 app_id = "ttn-app.example"
 app_key = "ttn-account-v2.example"
 dev_urls = {"example": {"id": 12345, "url": "http://example.com/locations"}}
 
+today = "{0:%Y%m%d}".format(datetime.now())
 f_secrets = "ttn.secrets"
 f_tracker = "tracker.url"
-f_logging = "proxy.log"
+f_logging = today + "_proxy.log"
 coord_scale = 10000000
 
 def uplink_callback(msg, client):
@@ -62,6 +65,9 @@ def main():
             secrets = json.loads(f.read())
             app_id = secrets['app_id']
             app_key = secrets['app_key']
+    else:
+        print("cannot find file with APP ID and KEY")
+        exit(1)
 
     print("APP ID: ", app_id)
     print("APP KEY:", app_key)
