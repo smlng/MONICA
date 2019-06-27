@@ -18,6 +18,9 @@ USEMODULE += gnrc_sock_udp
 USEMODULE += gnrc_icmpv6_echo
 USEMODULE += gcoap
 
+CFLAGS += -DGCOAP_REQ_WAITING_MAX=8
+CFLAGS += -DGCOAP_NON_TIMEOUT=1000000
+
 ifneq (,$(filter samr21-xpro,$(BOARD)))
   #USEMODULE += gcoap
 else

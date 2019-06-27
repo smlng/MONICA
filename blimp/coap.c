@@ -57,8 +57,11 @@ void coap_put_data(char *data, char *path)
     uint8_t buf[GCOAP_PDU_BUF_SIZE];
     coap_pkt_t pdu;
     size_t len;
+    unsigned msg_type = COAP_TYPE_NON;
 
     gcoap_req_init(&pdu, &buf[0], GCOAP_PDU_BUF_SIZE, COAP_METHOD_PUT, path);
+    coap_hdr_set_type(pdu.hdr, msg_type);
+
     memcpy(pdu.payload, data, strlen(data));
     len = gcoap_finish(&pdu, strlen(data), COAP_FORMAT_JSON);
     if (gcoap_req_send2(buf, len, &remote, _resp_handler) <= 0) {

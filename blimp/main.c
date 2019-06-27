@@ -28,6 +28,7 @@ static char strbuf[STRBUF_LEN];
 extern int coap_init(void);
 extern void coap_put_data(char *data, char *path);
 
+#if 0
 static void udp_send(char *addr_str, char *port_str, char *data)
 {
     int iface;
@@ -93,6 +94,7 @@ static void udp_send(char *addr_str, char *port_str, char *data)
     printf("Success: sent %u byte(s) to [%s]:%u\n", payload_size, addr_str,
            port);
 }
+#endif
 
 static void strato_print(const strato3_data_t *data)
 {
@@ -117,6 +119,7 @@ static void strato_print(const strato3_data_t *data)
     printf("}\n");
 }
 
+#if 0
 static int strato_json(const strato3_data_t *data, char *buf, size_t len)
 {
     if (!buf || !len) {
@@ -147,6 +150,86 @@ static int strato_json(const strato3_data_t *data, char *buf, size_t len)
     memset(fmtbuf, '\0', 32);
     fmt_float(fmtbuf, strato3_tofloat(&data->pressure), 3);
     pos += snprintf(buf+pos, len-pos, "\'p\':%s}", fmtbuf);
+    buf[pos] = '\0';
+    return 0;
+}
+#endif
+
+static int strato_json_ogc_l(const strato3_data_t *data, char *buf, size_t len)
+{
+    if (!buf || !len) {
+        DEBUG("%s: invalid buffer!\n", __func__);
+        return (-1);
+    }
+    memset(buf, '\0', len);
+    int pos = 0;
+    char fmtbuf[32];
+    pos += snprintf(buf, len, "{\'phenomenonTime\':\'%u-%02u-%02uT%02u:%02u:%02uZ\',",
+                    data->date.year, data->date.month, data->date.day,
+                    data->time.hour, data->time.min, data->time.sec);
+    memset(fmtbuf, '\0', 32);
+    fmt_float(fmtbuf, strato3_tocoord(&data->latitude), 7);
+    pos += snprintf(buf+pos, len-pos, "\'result\':[%s,", fmtbuf);
+    memset(fmtbuf, '\0', 32);
+    fmt_float(fmtbuf, strato3_tocoord(&data->longitude), 7);
+    pos += snprintf(buf+pos, len-pos, "%s]}", fmtbuf);
+    buf[pos] = '\0';
+    return 0;
+}
+
+static int strato_json_ogc_h(const strato3_data_t *data, char *buf, size_t len)
+{
+    if (!buf || !len) {
+        DEBUG("%s: invalid buffer!\n", __func__);
+        return (-1);
+    }
+    memset(buf, '\0', len);
+    int pos = 0;
+    char fmtbuf[32];
+    pos += snprintf(buf, len, "{\'phenomenonTime\':\'%u-%02u-%02uT%02u:%02u:%02uZ\',",
+                    data->date.year, data->date.month, data->date.day,
+                    data->time.hour, data->time.min, data->time.sec);
+    memset(fmtbuf, '\0', 32);
+    fmt_float(fmtbuf, strato3_tofloat(&data->humidity), 1);
+    pos += snprintf(buf+pos, len-pos, "\'result\':%s}", fmtbuf);
+    buf[pos] = '\0';
+    return 0;
+}
+
+static int strato_json_ogc_p(const strato3_data_t *data, char *buf, size_t len)
+{
+    if (!buf || !len) {
+        DEBUG("%s: invalid buffer!\n", __func__);
+        return (-1);
+    }
+    memset(buf, '\0', len);
+    int pos = 0;
+    char fmtbuf[32];
+    pos += snprintf(buf, len, "{\'phenomenonTime\':\'%u-%02u-%02uT%02u:%02u:%02uZ\',",
+                    data->date.year, data->date.month, data->date.day,
+                    data->time.hour, data->time.min, data->time.sec);
+    memset(fmtbuf, '\0', 32);
+    fmt_float(fmtbuf, strato3_tofloat(&data->pressure), 3);
+    pos += snprintf(buf+pos, len-pos, "\'result\':%s}", fmtbuf);
+    buf[pos] = '\0';
+    return 0;
+}
+
+static int strato_json_ogc_t(const strato3_data_t *data, char *buf, size_t len)
+{
+    if (!buf || !len) {
+        DEBUG("%s: invalid buffer!\n", __func__);
+        return (-1);
+    }
+    memset(buf, '\0', len);
+    int pos = 0;
+    char fmtbuf[32];
+    pos += snprintf(buf, len, "{\'phenomenonTime\':\'%u-%02u-%02uT%02u:%02u:%02uZ\',",
+                    data->date.year, data->date.month, data->date.day,
+                    data->time.hour, data->time.min, data->time.sec);
+    memset(fmtbuf, '\0', 32);
+    fmt_float(fmtbuf, strato3_tofloat(&data->temperature), 1);
+    pos += snprintf(buf+pos, len-pos, "\'result\':%s}", fmtbuf);
     buf[pos] = '\0';
     return 0;
 }
@@ -189,18 +272,37 @@ int main(void)
         return 1;
     }
 
-    DEBUG(".. init DONE!\n");
+    DEBUG(".. init DONE!\n\n");
     while (1) {
         strato3_data_t data;
         memset(&data, 0, sizeof(strato3_data_t));
+        printf("\n.. read sensor data\n");
         if(strato_read(&data) == 0) {
             strato_print(&data);
+            /*
             strato_json(&data, strbuf, STRBUF_LEN);
             printf("%s\n", strbuf);
             udp_send(BLIMP_PROXY_ADDR, BLIMP_PROXY_PORT, strbuf);
+            */
+            /* send location */
+            strato_json_ogc_l(&data, strbuf, STRBUF_LEN);
+            printf(" * LOCATION: %s\n", strbuf);
+            coap_put_data(strbuf, CONFIG_PATH_LOCATION);
+            /* send humidity */
+            strato_json_ogc_h(&data, strbuf, STRBUF_LEN);
+            printf(" * HUMIDITY: %s\n", strbuf);
+            coap_put_data(strbuf, CONFIG_PATH_HUMITIDY);
+            /* send pressure */
+            strato_json_ogc_p(&data, strbuf, STRBUF_LEN);
+            printf(" * PRESSURE: %s\n", strbuf);
+            coap_put_data(strbuf, CONFIG_PATH_PRESSURE);
+            /* send temperature */
+            strato_json_ogc_t(&data, strbuf, STRBUF_LEN);
+            printf(" * TEMPERATURE: %s\n", strbuf);
+            coap_put_data(strbuf, CONFIG_PATH_TEMPERATURE);
         }
         else {
-            DEBUG(".. got error\n");
+            DEBUG(" ! got error !\n");
         }
         xtimer_sleep(APP_SLEEP_TIME_S);
     }

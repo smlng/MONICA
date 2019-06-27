@@ -13,10 +13,10 @@
 #define CONFIG_PROXY_ADDR    "ff02::1"
 #define CONFIG_PROXY_PORT    "5683"
 
-#define CONFIG_PATH_TEMPERATURE "/Datastreams(2)/Observations"
-#define CONFIG_PATH_HUMITIDY    "/Datastreams(3)/Observations"
-#define CONFIG_PATH_PRESSURE    "/Datastreams(2)/Observations"
-#define CONFIG_PATH_LOCATION    "/Datastreams(3)/Observations"
+#define CONFIG_PATH_TEMPERATURE "/Datastreams(1)/Observations"
+#define CONFIG_PATH_HUMITIDY    "/Datastreams(2)/Observations"
+#define CONFIG_PATH_PRESSURE    "/Datastreams(3)/Observations"
+#define CONFIG_PATH_LOCATION    "/Datastreams(4)/Observations"
 
 /* LoRaWAN application configurations */
 #define LORAWAN_BUF_SIZE                (64U)
