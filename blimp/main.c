@@ -164,12 +164,12 @@ static int strato_json_ogc_l(const strato3_data_t *data, char *buf, size_t len)
     memset(buf, '\0', len);
     int pos = 0;
     char fmtbuf[32];
-    pos += snprintf(buf, len, "{\'phenomenonTime\':\'%u-%02u-%02uT%02u:%02u:%02uZ\',",
+    pos += snprintf(buf, len, "{\"phenomenonTime\":\"%u-%02u-%02uT%02u:%02u:%02uZ\",",
                     data->date.year, data->date.month, data->date.day,
                     data->time.hour, data->time.min, data->time.sec);
     memset(fmtbuf, '\0', 32);
     fmt_float(fmtbuf, strato3_tocoord(&data->latitude), 7);
-    pos += snprintf(buf+pos, len-pos, "\'result\':[%s,", fmtbuf);
+    pos += snprintf(buf+pos, len-pos, "\"result\":[%s,", fmtbuf);
     memset(fmtbuf, '\0', 32);
     fmt_float(fmtbuf, strato3_tocoord(&data->longitude), 7);
     pos += snprintf(buf+pos, len-pos, "%s]}", fmtbuf);
@@ -186,12 +186,12 @@ static int strato_json_ogc_h(const strato3_data_t *data, char *buf, size_t len)
     memset(buf, '\0', len);
     int pos = 0;
     char fmtbuf[32];
-    pos += snprintf(buf, len, "{\'phenomenonTime\':\'%u-%02u-%02uT%02u:%02u:%02uZ\',",
+    pos += snprintf(buf, len, "{\"phenomenonTime\":\"%u-%02u-%02uT%02u:%02u:%02uZ\",",
                     data->date.year, data->date.month, data->date.day,
                     data->time.hour, data->time.min, data->time.sec);
     memset(fmtbuf, '\0', 32);
     fmt_float(fmtbuf, strato3_tofloat(&data->humidity), 1);
-    pos += snprintf(buf+pos, len-pos, "\'result\':%s}", fmtbuf);
+    pos += snprintf(buf+pos, len-pos, "\"result\":%s}", fmtbuf);
     buf[pos] = '\0';
     return 0;
 }
@@ -205,12 +205,12 @@ static int strato_json_ogc_p(const strato3_data_t *data, char *buf, size_t len)
     memset(buf, '\0', len);
     int pos = 0;
     char fmtbuf[32];
-    pos += snprintf(buf, len, "{\'phenomenonTime\':\'%u-%02u-%02uT%02u:%02u:%02uZ\',",
+    pos += snprintf(buf, len, "{\"phenomenonTime\":\"%u-%02u-%02uT%02u:%02u:%02uZ\",",
                     data->date.year, data->date.month, data->date.day,
                     data->time.hour, data->time.min, data->time.sec);
     memset(fmtbuf, '\0', 32);
     fmt_float(fmtbuf, strato3_tofloat(&data->pressure), 3);
-    pos += snprintf(buf+pos, len-pos, "\'result\':%s}", fmtbuf);
+    pos += snprintf(buf+pos, len-pos, "\"result\":%s}", fmtbuf);
     buf[pos] = '\0';
     return 0;
 }
@@ -224,12 +224,12 @@ static int strato_json_ogc_t(const strato3_data_t *data, char *buf, size_t len)
     memset(buf, '\0', len);
     int pos = 0;
     char fmtbuf[32];
-    pos += snprintf(buf, len, "{\'phenomenonTime\':\'%u-%02u-%02uT%02u:%02u:%02uZ\',",
+    pos += snprintf(buf, len, "{\"phenomenonTime\":\"%u-%02u-%02uT%02u:%02u:%02uZ\",",
                     data->date.year, data->date.month, data->date.day,
                     data->time.hour, data->time.min, data->time.sec);
     memset(fmtbuf, '\0', 32);
     fmt_float(fmtbuf, strato3_tofloat(&data->temperature), 1);
-    pos += snprintf(buf+pos, len-pos, "\'result\':%s}", fmtbuf);
+    pos += snprintf(buf+pos, len-pos, "\"result\":%s}", fmtbuf);
     buf[pos] = '\0';
     return 0;
 }
