@@ -10,7 +10,7 @@
 #define BLIMP_PROXY_PORT    "6583"
 
 
-#define CONFIG_PROXY_ADDR    "ff02::1"
+#define CONFIG_PROXY_ADDR    "fe80::1ac0:ffee:c0ff:ee42"
 #define CONFIG_PROXY_PORT    "5683"
 
 #define CONFIG_PATH_LOCATION    "/Datastreams(66)/Observations"

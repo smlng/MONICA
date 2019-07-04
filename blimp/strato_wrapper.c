@@ -18,7 +18,7 @@
 #define MINMEA_COORD_UPSCALE    (10000000L)
 #define UART_READLINE_TIMEOUT   (1000000UL)
 
-static uint8_t _rx_buf_mem[STRATO3_UART_BUFSIZE];
+static char _rx_buf_mem[STRATO3_UART_BUFSIZE];
 isrpipe_t strato3_uart_isrpipe = ISRPIPE_INIT(_rx_buf_mem);
 static uart_t strato3_dev;
 static char cmd[] = "Ti\n";
@@ -36,7 +36,7 @@ static ssize_t _readline(isrpipe_t *isrpipe, char *resp_buf, size_t len, uint32_
 
     while (len) {
         int read_res;
-        if ((read_res = isrpipe_read_timeout(isrpipe, (uint8_t *)resp_pos, 1, timeout)) == 1) {
+        if ((read_res = isrpipe_read_timeout(isrpipe, resp_pos, 1, timeout)) == 1) {
             if (*resp_pos == '\r') {
                 continue;
             }
