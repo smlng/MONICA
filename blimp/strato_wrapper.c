@@ -14,11 +14,7 @@
 #define ENABLE_DEBUG        (1)
 #include "debug.h"
 
-
-#define MINMEA_COORD_UPSCALE    (10000000L)
-#define UART_READLINE_TIMEOUT   (1000000UL)
-
-static char _rx_buf_mem[STRATO3_UART_BUFSIZE];
+static uint8_t _rx_buf_mem[STRATO3_UART_BUFSIZE];
 isrpipe_t strato3_uart_isrpipe = ISRPIPE_INIT(_rx_buf_mem);
 static uart_t strato3_dev;
 static char cmd[] = "Ti\n";
@@ -30,13 +26,9 @@ static ssize_t _readline(isrpipe_t *isrpipe, char *resp_buf, size_t len, uint32_
     ssize_t res = -1;
     char *resp_pos = resp_buf;
 
-    tsrb_empty(&isrpipe->tsrb);
-
-    memset(resp_buf, 0, len);
-
     while (len) {
         int read_res;
-        if ((read_res = isrpipe_read_timeout(isrpipe, resp_pos, 1, timeout)) == 1) {
+        if ((read_res = isrpipe_read_timeout(isrpipe, (uint8_t *)resp_pos, 1, timeout)) == 1) {
             if (*resp_pos == '\r') {
                 continue;
             }
@@ -64,11 +56,12 @@ int strato_read(strato3_data_t *data)
     DEBUG("%s\n", __func__);
 
     char linebuf[STRATO3_LINE_BUFSIZE];
+    memset(linebuf, 0, STRATO3_LINE_BUFSIZE);
 
     uart_write(strato3_dev, (uint8_t *)cmd, 3);
     ssize_t res = _readline(&strato3_uart_isrpipe,
                             linebuf, sizeof(linebuf),
-                            UART_READLINE_TIMEOUT);
+                            STRATO3_UART_TIMEOUT);
     if (res > 3) {
         DEBUG(".. [%s]\n", linebuf);
         if (strato3_parse(linebuf, data) == 0) {
